@@ -1,0 +1,40 @@
+{
+  "name": "Eye type detection",
+  "namespace": "ia.eyedetector",
+  "description": "Detection of Left or Right eye in Retinal Fundus image",
+  "author": "Pallab Roy, MRL",
+  "version": "0.0.2",
+  "hints": [
+    "classifier",
+    "left right eye",
+    "Fundus image"
+  ],
+  "capabilities": [
+    {
+      "name": "Detection of Left or Right eye in Retinal Fundus image",
+      "taskName": "classify",
+      "hints": [
+        "classifier",
+        "left right eye",
+        "Fundus image"
+      ],
+      "requestSchema": {
+        "description": "Request Schema for eye classification task",
+        "properties": {
+          "imageid": {
+            "description": "The RGB Fundus image in Base64 encoded form",
+            "type": "string"
+          }
+        },
+        "required": [
+          "image"
+        ],
+        "type": "object"
+      },
+      "resultSchemaComponents": [
+        "DATA",
+        "IMAGE"
+      ]
+    }
+  ]
+}

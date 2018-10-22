@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mmacommon.util.imageio &mdash; MMACOMMON 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="MMACOMMON 1.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">MMACOMMON 1.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mmacommon.util.imageio</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: imageio</span>
+<span class="sd">   :synopsis: Basic image IO operations such as saving, loading and encoding.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">cStringIO</span>
+
+<span class="kn">import</span> <span class="nn">PIL</span> <span class="kn">as</span> <span class="nn">pil</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c1"># Map first two bytes of image to image format.</span>
+<span class="n">PREFIX2FMT</span> <span class="o">=</span> <span class="p">{(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">216</span><span class="p">):</span> <span class="s1">&#39;jpg&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">73</span><span class="p">):</span> <span class="s1">&#39;gif&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">137</span><span class="p">,</span> <span class="mi">80</span><span class="p">):</span> <span class="s1">&#39;png&#39;</span><span class="p">,</span>
+              <span class="p">(</span><span class="mi">66</span><span class="p">,</span> <span class="mi">77</span><span class="p">):</span> <span class="s1">&#39;bmp&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">73</span><span class="p">,</span> <span class="mi">73</span><span class="p">):</span> <span class="s1">&#39;tif&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">77</span><span class="p">,</span> <span class="mi">77</span><span class="p">):</span> <span class="s1">&#39;tif&#39;</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="save_raw_image"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageio.save_raw_image">[docs]</a><span class="k">def</span> <span class="nf">save_raw_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Save raw image in binary format to specified path.</span>
+
+<span class="sd">    Also see :py:func:`.load_raw_image`.</span>
+
+<span class="sd">    :param raw image: Image of any type.</span>
+<span class="sd">    :param str path: File path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">image</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_raw_image"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageio.load_raw_image">[docs]</a><span class="k">def</span> <span class="nf">load_raw_image</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load raw image in binary format from specified path.</span>
+
+<span class="sd">    Also see :py:func:`.save_raw_image`.</span>
+
+<span class="sd">    :param str path: File path.</span>
+<span class="sd">    :return: Raw image</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="image_from_data_url"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageio.image_from_data_url">[docs]</a><span class="k">def</span> <span class="nf">image_from_data_url</span><span class="p">(</span><span class="n">data_url</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return PIL Image for data_url.</span>
+<span class="sd">    :param data_url: Data URL for image, e.g.:</span>
+<span class="sd">             &#39;data:image/gif;base64,/9j/4SXNRXhpZgAUAFFABRQB//Z&#39;</span>
+<span class="sd">    :return: PIL Image</span>
+<span class="sd">    :rtype: PIL.Image</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image_data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">extract_image_and_type</span><span class="p">(</span><span class="n">data_url</span><span class="p">)</span>
+    <span class="n">stream</span> <span class="o">=</span> <span class="n">cStringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">image_data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pil</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="pil_to_data_url"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageio.pil_to_data_url">[docs]</a><span class="k">def</span> <span class="nf">pil_to_data_url</span><span class="p">(</span><span class="n">pil_image</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return data_url for PIL Image.</span>
+<span class="sd">    :param pil_image: PIL image</span>
+<span class="sd">    :param str fmt: Image format, e.g. jpg, tif, png, gif, bmp</span>
+<span class="sd">    :return: data url</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">cStringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+    <span class="n">pil_fmt</span> <span class="o">=</span> <span class="s1">&#39;JPEG&#39;</span> <span class="k">if</span> <span class="s1">&#39;jpg&#39;</span> <span class="k">else</span> <span class="n">fmt</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="n">pil_image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">pil_fmt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">image_to_data_url</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span> <span class="n">fmt</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ndarray_from_data_url"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageio.ndarray_from_data_url">[docs]</a><span class="k">def</span> <span class="nf">ndarray_from_data_url</span><span class="p">(</span><span class="n">data_url</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return numpy ndarray for image in data_url.</span>
+<span class="sd">    :param data_url: Data URL for image, e.g.:</span>
+<span class="sd">             &#39;data:image/gif;base64,/9j/4SXNRXhpZgAUAFFABRQB//Z&#39;</span>
+<span class="sd">    :param dtype:  data-type, inferred if None</span>
+<span class="sd">    :return: Image as numpy array</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">image_from_data_url</span><span class="p">(</span><span class="n">data_url</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="image_to_data_url"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageio.image_to_data_url">[docs]</a><span class="k">def</span> <span class="nf">image_to_data_url</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">fmt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return data URL for given raw image.</span>
+
+<span class="sd">    :param str image: Raw binary image in some format.</span>
+<span class="sd">    :param str fmt: Image format, e.g. jpg, tif, png, gif, bmp</span>
+<span class="sd">    :return: Data URL for image, e.g.:</span>
+<span class="sd">             &#39;data:image/gif;base64,/9j/4SXNRXhpZgAUAFFABRQB//Z&#39;</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;data:image/{0};base64,{1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fmt</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="imagefile_to_data_url"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageio.imagefile_to_data_url">[docs]</a><span class="k">def</span> <span class="nf">imagefile_to_data_url</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read image in binary format and return data URL with base64 encoded image.</span>
+
+<span class="sd">    Implementation based on:</span>
+<span class="sd">    https://github.com/sindresorhus/file-type/blob/master/index.js</span>
+<span class="sd">    http://www.fileformat.info/format/tiff/corion.htm</span>
+
+<span class="sd">    :param str path: Path to image in binary format.</span>
+<span class="sd">    :return: data URL, e.g. &#39;data:image/gif;base64,/9j/4SXNRXhpZg...AABRQB//Z&#39;</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    :raises: ValueError if file extension is missing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_extension</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">img</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PREFIX2FMT</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Unknown image type: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; : &#39;</span> <span class="o">+</span> <span class="n">path</span><span class="p">)</span>
+
+    <span class="n">img</span> <span class="o">=</span> <span class="n">load_raw_image</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">image_to_data_url</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">_extension</span><span class="p">(</span><span class="n">img</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="parse_data_url"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageio.parse_data_url">[docs]</a><span class="k">def</span> <span class="nf">parse_data_url</span><span class="p">(</span><span class="n">data_url</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses a data URL and returns its components.</span>
+
+<span class="sd">    Data URLs are defined as follows::</span>
+
+<span class="sd">       dataurl    := &quot;data:&quot; [ mediatype ] [ &quot;;base64&quot; ] &quot;,&quot; data</span>
+<span class="sd">       mediatype  := [ type &quot;/&quot; subtype ] *( &quot;;&quot; parameter )</span>
+<span class="sd">       data       := *urlchar</span>
+<span class="sd">       parameter  := attribute &quot;=&quot; value</span>
+
+<span class="sd">    This specific implementation is limited to data urls of the following</span>
+<span class="sd">    format::</span>
+
+<span class="sd">        dataurl := &quot;data:&quot; type &quot;/&quot; subtype &quot;;base64&quot; &quot;,&quot; data</span>
+
+<span class="sd">    Here an example::</span>
+<span class="sd">      &#39;data:image/jpg;base64,/9j/4SXNRXhpZg...AUAFFABRQB//Z&#39;</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">    - http://tools.ietf.org/html/rfc2397</span>
+<span class="sd">    - http://www.askapache.com/online-tools/base64-image-converter/</span>
+
+<span class="sd">    :param str data_url: A data URL.</span>
+<span class="sd">    :return: Components of the data URL,</span>
+<span class="sd">             e.g. (&#39;image&#39;, &#39;png&#39;, &#39;base64&#39;, &#39;/9j/4S&#39;)</span>
+<span class="sd">    :rtype: tuple (datatype, subtype, encoding, data)</span>
+<span class="sd">    :raises: ValueError if data URL doesn&#39;t follow spec.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data_url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;data:&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not a data URL: &quot;</span> <span class="o">+</span> <span class="n">data_url</span><span class="p">[:</span><span class="mi">40</span><span class="p">])</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">header</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data_url</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;data:&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">mediatype</span><span class="p">,</span> <span class="n">encoding</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">datatype</span><span class="p">,</span> <span class="n">subtype</span> <span class="o">=</span> <span class="n">mediatype</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Data URL not in correct format: &quot;</span> <span class="o">+</span> <span class="n">data_url</span><span class="p">[:</span><span class="mi">40</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">datatype</span><span class="p">,</span> <span class="n">subtype</span><span class="p">,</span> <span class="n">encoding</span><span class="p">,</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="extract_image_and_type"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageio.extract_image_and_type">[docs]</a><span class="k">def</span> <span class="nf">extract_image_and_type</span><span class="p">(</span><span class="n">data_url</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns raw image and type from a data url for a base64 encoded image.</span>
+
+<span class="sd">    Data URLs for base64 encoded images are of the form::</span>
+
+<span class="sd">      &#39;data:image/jpg;base64,/9j/4SXNRXhpZg...AUAFFABRQB//Z&#39;</span>
+
+<span class="sd">    :param str data_url: Data URL for an image.</span>
+<span class="sd">    :return: raw image and type, e.g. &#39;jpg&#39;</span>
+<span class="sd">    :rtype: tuple (raw_image, type)</span>
+<span class="sd">    :raises: ValueError if data url doesn&#39;t contain base64 encoded image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">datatype</span><span class="p">,</span> <span class="n">subtype</span><span class="p">,</span> <span class="n">encoding</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">parse_data_url</span><span class="p">(</span><span class="n">data_url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">encoding</span> <span class="o">!=</span> <span class="s1">&#39;base64&#39;</span> <span class="ow">or</span> <span class="n">datatype</span> <span class="o">!=</span> <span class="s1">&#39;image&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not a base64 encoded image: &quot;</span> <span class="o">+</span> <span class="n">data_url</span><span class="p">[:</span><span class="mi">50</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">subtype</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">MMACOMMON 1.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, IBM.
+      Last updated on Sep 19, 2016.
+    </div>
+  </body>
+</html>

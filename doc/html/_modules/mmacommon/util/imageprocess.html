@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mmacommon.util.imageprocess &mdash; MMACOMMON 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="MMACOMMON 1.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">MMACOMMON 1.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mmacommon.util.imageprocess</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: imagepreprocess</span>
+<span class="sd">   :synopsis: image preprocessing functions such as grey-scale conversion,</span>
+<span class="sd">               histogram equalisation and CLAHE.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+
+<div class="viewcode-block" id="bgr_to_rgb"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageprocess.bgr_to_rgb">[docs]</a><span class="k">def</span> <span class="nf">bgr_to_rgb</span><span class="p">(</span><span class="n">bgr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts BGR image to RGB.</span>
+
+<span class="sd">    :param numpy.ndarray bgr: The bgr image.</span>
+<span class="sd">    :return: rgb image</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">bgr</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="rgb_to_bgr"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageprocess.rgb_to_bgr">[docs]</a><span class="k">def</span> <span class="nf">rgb_to_bgr</span><span class="p">(</span><span class="n">rgb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts RGB image to BGR.</span>
+
+<span class="sd">    :param numpy.ndarray rgb: The rgb image.</span>
+<span class="sd">    :return:bgr image</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">rgb</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="bgr_to_gray"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageprocess.bgr_to_gray">[docs]</a><span class="k">def</span> <span class="nf">bgr_to_gray</span><span class="p">(</span><span class="n">bgr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts BGR image to gray scale.</span>
+
+<span class="sd">    :param numpy.ndarray bgr: The bgr image.</span>
+<span class="sd">    :return: Gray scale image</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">bgr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>  <span class="c1"># Ensure 3D array</span>
+    <span class="k">assert</span> <span class="n">bgr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span>  <span class="c1"># Ensure 3 colour channel image</span>
+    <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">bgr</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="rgb_to_gray"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageprocess.rgb_to_gray">[docs]</a><span class="k">def</span> <span class="nf">rgb_to_gray</span><span class="p">(</span><span class="n">rgb</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts RGB image to gray scale.</span>
+
+<span class="sd">    :param numpy.ndarray rgb: The rgb image.</span>
+<span class="sd">    :return: Gray scale image</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">rgb</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>  <span class="c1"># Ensure 3D array</span>
+    <span class="k">assert</span> <span class="n">rgb</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span>  <span class="c1"># Ensure 3 colour channel image</span>
+    <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_RGB2GRAY</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="histo_equal"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageprocess.histo_equal">[docs]</a><span class="k">def</span> <span class="nf">histo_equal</span><span class="p">(</span><span class="n">grayimg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies histogram equalisation to the image.</span>
+
+<span class="sd">    :param numpy.ndarray grayimg: The grayscale image.</span>
+<span class="sd">    :return: Equalised image</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">grayimg</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>  <span class="c1"># Ensure 2D array (gray scale image)</span>
+    <span class="k">return</span> <span class="n">cv2</span><span class="o">.</span><span class="n">equalizeHist</span><span class="p">(</span><span class="n">grayimg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="clahe_equal"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageprocess.clahe_equal">[docs]</a><span class="k">def</span> <span class="nf">clahe_equal</span><span class="p">(</span><span class="n">grayimg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies contrast limited adaptive histogram equalisation to the image.</span>
+
+<span class="sd">    Image divided into 8x8 tiles and each tile is histogram equalised.</span>
+<span class="sd">    Contrast limiting is applied to prevent any noise being amplified.</span>
+
+<span class="sd">    :param numpy.ndarray grayimg: The grayscale image.</span>
+<span class="sd">    :return: clah equalised image</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">grayimg</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>  <span class="c1"># Ensure 2D array (gray scale image)</span>
+    <span class="c1"># create clahe object</span>
+    <span class="n">clahe</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">createCLAHE</span><span class="p">(</span><span class="n">clipLimit</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">tileGridSize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">clahe</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">grayimg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="normalize"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageprocess.normalize">[docs]</a><span class="k">def</span> <span class="nf">normalize</span><span class="p">(</span><span class="n">grayimg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalise/standardise all pixels.</span>
+
+<span class="sd">    :param numpy.ndarray grayimg: The grayscale image.</span>
+<span class="sd">    :return: clah equalised image</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">grayimg</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>  <span class="c1"># Ensure 2D array (gray scale image)</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">grayimg</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="p">((</span><span class="n">grayimg</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">grayimg</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">grayimg</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(((</span><span class="n">norm</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">norm</span><span class="p">))</span> <span class="o">/</span>
+             <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">norm</span><span class="p">)))</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="adjust_gamma"><a class="viewcode-back" href="../../../mmacommon.util.html#mmacommon.util.imageprocess.adjust_gamma">[docs]</a><span class="k">def</span> <span class="nf">adjust_gamma</span><span class="p">(</span><span class="n">grayimg</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adjust gamma of the image.</span>
+
+<span class="sd">    :param numpy.ndarray grayimg: The grayscale image.</span>
+<span class="sd">    :return: image with gamma adjusted</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">grayimg</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>  <span class="c1"># Ensure 2D array (gray scale image)</span>
+    <span class="c1"># Create look up table mapping pixels [0,255] to their adjusted values</span>
+    <span class="n">invgamma</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">gamma</span>
+    <span class="n">newimg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">grayimg</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([((</span><span class="n">i</span> <span class="o">/</span> <span class="mf">255.0</span><span class="p">)</span> <span class="o">**</span> <span class="n">invgamma</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span>
+                      <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">)])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+    <span class="n">newimg</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">LUT</span><span class="p">(</span><span class="n">grayimg</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">newimg</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">MMACOMMON 1.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, IBM.
+      Last updated on Sep 19, 2016.
+    </div>
+  </body>
+</html>
