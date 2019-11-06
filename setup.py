@@ -76,7 +76,7 @@ setup(
     install_requires=[
         'six>= 1.10.0',
         'numpy>=1.11.0',
-        'Pillow>=3.2.0',
+        'Pillow>=6.2.0',
         'scikit-image>=0.12.3',
 
     ],
