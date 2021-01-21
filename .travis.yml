@@ -5,6 +5,7 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
+  - "3.8"
 
 before_install:
   - deactivate
@@ -21,17 +22,6 @@ script:
   - pytest
   - pylint mmacommon
 
-after_success:
-  # Trigger dependent build of Docker base images
-  ./trigger-travis.sh deepeyes%2Fdocker-base-image
-
-deploy:
-  - provider: pypi
-    user: "$ARTIFACTORY_USER_US"
-    password: "$ARTIFACTORY_KEY_US"
-    server: https://na.artifactory.swg-devops.com/artifactory/api/pypi/aur-public-pypi-local
-    on:
-      branch: master
 
 branches:
   only:

@@ -2,4 +2,3 @@ recursive-include doc/html *
 recursive-include tests/data *
 include README.txt
 include CHANGES.txt
-include guideline_python.md

@@ -85,7 +85,7 @@ def image_from_url(url):
     """
     Load image from a URL (not a data url!)
 
-    :param URL url: ULR, e.g. "https://www.ibm.com/image.png" or
+    :param URL url: ULR, e.g. "https://www.quuux.com/image.png" or
                               "file:///your/file/image.png"
     :return: PIL Image
     :rtype: PIL.Image
@@ -184,11 +184,11 @@ def ndarray_from_url(url):
     or an image file in a common format (PNG, GIF, JPEG).
 
     Example URLs:
-    https://www.ibm.com/data.npy
+    https://www.quuux.com/data.npy
     file:///your/file/data.npy
     file:///your/file/data.npz
     file:///your/file/image.png
-    https://www.ibm.com/image.jpg
+    https://www.quuux.com/image.jpg
 
     :param URL url: ULR
     :return: Numpy array
