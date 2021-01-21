@@ -23,7 +23,7 @@ def test_largest_component_empty_mask():
     with pytest.raises(ValueError) as ex:
         image = np.zeros((3, 3))
         largest_component_mask(image)
-    assert 'Input mask is empty!' in str(ex)
+    assert 'Input mask is empty!' in str(ex.value)
 
 
 def test_extract_contours_empty_image():

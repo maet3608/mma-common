@@ -95,7 +95,7 @@ def test_clear_folder(init_test_folders):
 
 
 def test_findpath():
-    expected = os.path.join('mmacommon', 'tests', 'data', 'data.csv')
+    expected = os.path.join('mma-common', 'tests', 'data', 'data.csv')
     assert mf.findpath('data.csv').endswith(expected)
     assert mf.findpath('data/data.csv').endswith(expected)
     assert mf.findpath('tests/data/data.csv').endswith(expected)

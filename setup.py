@@ -65,13 +65,13 @@ class PyLintCommand(TestCommand):
 
 
 setup(
-    name='mmacommon',
+    name=mmacommon.__name__,
     version=mmacommon.__version__,
-    url='https://github.ibm.com/aur-mma/mmacommon.git',
+    url='git@github.com:maet3608/mma-common.git',
     author='Stefan Maetschke',
-    author_email='stefanrm@au1.ibm.com',
+    author_email='stefan.maetschke@gmail.com',
     description='Common library for Multimedia Analytics',
-    long_description=read_readmes('README.md', 'guideline_python.md'),
+    long_description=read_readmes('README.md'),
     packages=find_packages(exclude=['setup']),
     install_requires=[
         'six>= 1.10.0',

@@ -1,0 +1,39 @@
+language: python
+
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+
+before_install:
+  - deactivate
+  - sudo pip install --upgrade pip
+
+install:
+  # removing binary libs for the moment
+  #- sudo apt-get install libopenblas-dev liblapack-dev gfortran
+  - xargs -a requirements.txt -n 1 pip install --user
+  - pip install pytest
+  - pip install pylint
+
+script:
+  - pytest
+  - pylint mmacommon
+
+after_success:
+  # Trigger dependent build of Docker base images
+  ./trigger-travis.sh deepeyes%2Fdocker-base-image
+
+deploy:
+  - provider: pypi
+    user: "$ARTIFACTORY_USER_US"
+    password: "$ARTIFACTORY_KEY_US"
+    server: https://na.artifactory.swg-devops.com/artifactory/api/pypi/aur-public-pypi-local
+    on:
+      branch: master
+
+branches:
+  only:
+    - master
+    - stable

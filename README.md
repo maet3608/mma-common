@@ -1,2 +1,6 @@
-# mma-common
-A small library with utility functions for multimedia analytics
+Description
+===========
+
+Common code for multi-media-analytics projects
+
+
